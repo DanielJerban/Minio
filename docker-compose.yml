@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  minio:
+    image: minio/minio:latest
+    restart: always
+    volumes:
+      - ./data:/data
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    command: server --address 0.0.0.0:9000 --console-address 0.0.0.0:9001 /data
+    user: root
+    ports:
+      - 9000:9000  
+      - 9001:9001

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<ArrayOfArrayOfArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ArrayOfArrayOfString>
+    <ArrayOfString>
+      <string>NuGet: MinioApi2</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\DJ\source\repos\MinioApi\MinioApi2\Controllers\FileController.cs</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>C:\Users\DJ\AppData\Local\Temp\MetadataAsSource\76260fd56e5f4029a8ca0f03a8ac51ad\DecompilationMetadataAsSourceFileProvider\200f82e5cdbe4a90aeaf11dc91f6feb0\Stream.cs</string>
+    </ArrayOfString>
+  </ArrayOfArrayOfString>
+</ArrayOfArrayOfArrayOfString>

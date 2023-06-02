@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33424.131
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinioApi2", "MinioApi2\MinioApi2.csproj", "{B3246A93-7C26-4D21-AEB4-1252AD881C1C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3246A93-7C26-4D21-AEB4-1252AD881C1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3246A93-7C26-4D21-AEB4-1252AD881C1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3246A93-7C26-4D21-AEB4-1252AD881C1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3246A93-7C26-4D21-AEB4-1252AD881C1C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98701289-AEC0-43E7-9805-CB38B4651AEB}
+	EndGlobalSection
+EndGlobal

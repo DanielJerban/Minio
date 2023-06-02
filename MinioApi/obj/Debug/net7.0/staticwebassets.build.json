@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "vHosVtVOF9D6LlsU0T0+zl5VnIf2YJ5oqh77G3s3iFE=",
+  "Source": "MinioApi",
+  "BasePath": "_content/MinioApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
