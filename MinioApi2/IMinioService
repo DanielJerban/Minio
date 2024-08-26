@@ -1,0 +1,10 @@
+public interface IMinioService
+{
+    Task<string> UploadFile(IFormFile file, MinioBucketEnum bucket, CancellationToken cancellation);
+    Task<string> UploadFile(IFormFile file, string fileName, MinioBucketEnum bucket, CancellationToken cancellation);
+    Task<string?> GetFileAsBase64(string fileName, MinioBucketEnum bucket, CancellationToken cancellation);
+    Task<MemoryStream?> GetFileAsMemoryStream(string fileName, MinioBucketEnum bucket, CancellationToken cancellation);
+    Task DeleteFile(string fileName, MinioBucketEnum bucket, CancellationToken cancellation);
+    Task<List<string>> GetListFiles(string bucketName, CancellationToken cancellationToken);
+    Task<bool> IsAny(string buckeNmae, CancellationToken cancellationToken);
+}
