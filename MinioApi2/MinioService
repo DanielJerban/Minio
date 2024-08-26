@@ -1,0 +1,206 @@
+public class MinioService : IMinioService
+{
+    private readonly string _host;
+    private readonly string _accessKey;
+    private readonly string _secretKey;
+    public MinioService(IConfiguration configuration)
+    {
+        _host = configuration["Minio:Host"] ?? throw new InvalidOperationException("Minio host address not defined");
+        _secretKey = configuration["Minio:SecretKey"] ?? throw new InvalidOperationException("Minio secret key not defined");
+        _accessKey = configuration["Minio:AccessKey"] ?? throw new InvalidOperationException("Minio access key not defined");
+    }
+
+    public async Task<string> UploadFile(IFormFile file, MinioBucketEnum bucket, CancellationToken cancellation)
+    {
+        return await PrivateUploadFile(file, file.FileName, bucket, cancellation);
+    }
+
+    /// <summary>
+    /// if you want to make a directory pass your directory name to fileName param
+    /// example => resource/myImage.jpg
+    /// </summary>
+    public async Task<string> UploadFile(IFormFile file, string fileName, MinioBucketEnum bucket, CancellationToken cancellation)
+    {
+        return await PrivateUploadFile(file, fileName, bucket, cancellation);
+    }
+    public async Task<List<string>> GetListFiles(string bucketName,CancellationToken cancellationToken)
+    {
+        var minioClient = new MinioClient()
+          .WithEndpoint(_host)
+          .WithCredentials(_accessKey, _secretKey)
+          // .WithSSL()
+          .Build();
+
+        var list=new List<string>();
+
+        ListObjectsArgs args = new ListObjectsArgs().WithBucket(bucketName);
+
+        var observale =  minioClient.ListObjectsAsync(args);
+
+         observale.Subscribe(item => {
+             list.Add(item.Key);
+            });
+        return list;
+
+    }
+    public async Task<bool> IsAny(string buckeNmae,CancellationToken cancellationToken)
+    {
+        var list = await GetListFiles(buckeNmae,cancellationToken);
+        return list.Count() != 0;
+    }
+    public async Task<string?> GetFileAsBase64(string fileName, MinioBucketEnum bucket, CancellationToken cancellation)
+    {
+        var ms = await GetFileAsMemoryStream(fileName, bucket, cancellation);
+        if (ms == null)
+        {
+            return null;
+        }
+        var fileBytes = ms.ToArray();
+        var fileBase64 = Convert.ToBase64String(fileBytes);
+
+        return fileBase64;
+    }
+
+    public async Task<MemoryStream?> GetFileAsMemoryStream(string fileName, MinioBucketEnum bucket, CancellationToken cancellation)
+    {
+        string bucketName = GetBucketName(bucket);
+
+        var minioClient = new MinioClient()
+            .WithEndpoint(_host)
+            .WithCredentials(_accessKey, _secretKey)
+            // .WithSSL()
+            .Build();
+
+        // Confirm object exists before attempting to get. 
+        var statObjectArgs = new StatObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(fileName);
+        try
+        {
+            await minioClient.StatObjectAsync(statObjectArgs, cancellation);
+        }
+        catch
+        {
+            return null;
+        }
+
+        var ms = new MemoryStream();
+
+        var buffer = new byte[16 * 1024];
+        var getObjectArgs = new GetObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(fileName)
+            .WithCallbackStream((stream) =>
+            {
+                int read;
+                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+            });
+        await minioClient.GetObjectAsync(getObjectArgs, cancellation);
+
+        return ms;
+    }
+
+    public async Task DeleteFile(string fileName, MinioBucketEnum bucket, CancellationToken cancellation)
+    {
+        string bucketName = GetBucketName(bucket);
+
+        var minioClient = new MinioClient()
+            .WithEndpoint(_host)
+            .WithCredentials(_accessKey, _secretKey)
+            // .WithSSL()
+            .Build();
+
+        var rArgs = new RemoveObjectArgs().WithBucket(bucketName).WithObject(fileName);
+
+        await minioClient.RemoveObjectAsync(rArgs, cancellation);
+    }
+
+    private string GetBucketName(MinioBucketEnum bucket)
+    {
+        string result;
+        switch (bucket)
+        {
+            case MinioBucketEnum.Form:
+                result = "forms";
+                break;
+            case MinioBucketEnum.Report:
+                result = "reports";
+                break;
+            case MinioBucketEnum.Personal:
+                result = "personals";
+                break;
+            case MinioBucketEnum.BPMN:
+                result = "bpmn";
+                break;
+            case MinioBucketEnum.FormClassification:
+                result = "formclassifications";
+                break;
+            default:
+                result = "common";
+                break;
+        }
+
+        return result;
+    }
+
+    private async Task CheckBucketExistence(MinioClient client, string bucketName, CancellationToken cancellation)
+    {
+        var bucketExistArgs = new BucketExistsArgs().WithBucket(bucketName);
+        bool found = await client.BucketExistsAsync(bucketExistArgs, cancellation);
+        if (!found)
+        {
+            var makeBucketArgs = new MakeBucketArgs().WithBucket(bucketName);
+            await client.MakeBucketAsync(makeBucketArgs, cancellation);
+        }
+    }
+
+    private async Task<string> PrivateUploadFile(IFormFile file, string fileName, MinioBucketEnum bucket,
+        CancellationToken cancellation)
+    {
+        string bucketName = GetBucketName(bucket);
+
+        var minioClient = new MinioClient()
+            .WithEndpoint(_host)
+            .WithCredentials(_accessKey, _secretKey)
+            // .WithSSL()
+            .Build();
+
+        await CheckBucketExistence(minioClient, bucketName, cancellation);
+
+        using (var ms = new MemoryStream())
+        {
+            await file.CopyToAsync(ms, cancellation);
+            var bs = ms.ToArray();
+
+            using var fileStream = new MemoryStream(bs);
+            var poa = new PutObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(fileName)
+                .WithStreamData(fileStream)
+                .WithObjectSize(fileStream.Length)
+                .WithContentType("application/octet-stream");
+
+            // upload file
+            await minioClient.PutObjectAsync(poa, cancellation);
+        }
+
+        var statObjectArgs = new StatObjectArgs()
+            .WithBucket(bucketName)
+            .WithObject(fileName);
+
+        // confirm upload
+        var objectStat = await minioClient.StatObjectAsync(statObjectArgs, cancellation);
+
+        if (objectStat == null)
+        {
+            throw new Exception("امکان بارگذاری فایل وجود ندارد");
+        }
+
+        return
+            $"{objectStat.ObjectName}: {objectStat.ETag} {objectStat.ETag} {objectStat.VersionId} {objectStat.ContentType} {objectStat.Size}";
+
+    }
+}
